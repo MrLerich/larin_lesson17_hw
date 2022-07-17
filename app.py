@@ -1,9 +1,11 @@
 # app.py
 
 from flask import Flask, request, jsonify
+from flask.views import View
 from flask_restx import Api, Resource, Namespace
 
 import models
+from create_data import genre
 from models import *
 from config import *
 
@@ -12,7 +14,7 @@ api: Api = Api(app, description='Movies API')
 # Создаю namespaces
 movies_ns: Namespace = api.namespace('movies')
 directors_ns: Namespace = api.namespace('directors')
-genre_ns: Namespace = api.namespace('genre')
+genres_ns: Namespace = api.namespace('genres')
 
 
 @movies_ns.route('/')
@@ -24,9 +26,9 @@ class MoviesView(Resource):
         genre_id = request.args.get('genre_id')
         # представление возвращает только фильмы с определенным режиссером и жанром по запросу типа: /movies/?director_id=2&genre_id=4
         if director_id and genre_id:
-            query = movies_schema.dump(Movie.query.filter(Movie.director_id == director_id,
+            director_with_genre = movies_schema.dump(Movie.query.filter(Movie.director_id == director_id,
                                                           Movie.genre_id == genre_id).all())
-            return query, 200
+            return director_with_genre, 200
 
         if director_id:
             director = movies_schema.dump(Movie.query.filter(Movie.director_id == director_id).all())
@@ -49,6 +51,40 @@ class MovieView(Resource):
             return f'Фильма с идентификатором №{movie_id} нет в базе', 404
 
         return movie_schema.dump(movie), 200
+
+@directors_ns.route('/')
+class DirectorsView(Resource):
+
+    def get(self):
+        directors = db.session.query(models.Director).all()
+        return directors_schema.dump(directors), 200
+
+@directors_ns.route('/<int:director_id>')
+class DirectorView(Resource):
+
+    def get(self, director_id):
+        director = db.session.query(models.Director).filter(models.Director.id == director_id).first()
+        if director is None:
+            return f'Режиссёра с идентификатором №{movie_id} нет в базе', 404
+
+        return director_schema.dump(director), 200
+
+@genres_ns.route('/')
+class GenresView(Resource):
+
+    def get(self):
+        genres = db.session.query(models.Genre).all()
+        return genres_schema.dump(genres), 200
+
+@genres_ns.route('/<int:genre_id>')
+class GenreView(Resource):
+
+    def get(self, genre_id):
+        genre = db.session.query(models.Genre).filter(models.Genre.id == genre_id).first()
+        if genre is None:
+            return f'Жанра с идентификатором №{movie_id} нет в базе', 404
+
+        return genre_schema.dump(genre), 200
 
 
 if __name__ == '__main__':
