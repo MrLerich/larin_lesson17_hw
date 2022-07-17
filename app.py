@@ -2,38 +2,42 @@
 
 from flask import Flask, request
 from flask_restx import Api, Resource
-from flask_sqlalchemy import SQLAlchemy
-from marshmallow import Schema, fields
+from models import *
+from config import app
 
-app = Flask(__name__)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///test.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-db = SQLAlchemy(app)
+api = Api(app)
+
+movies_ns = api.namespace('movies')
+directors_ns = api.namespace('directors')
+genre_ns = api.namespace('genre')
+
+# Возвращает список всех фильмов наше БД
+@movies_ns.route('/')
+class MovieView(Resource):
+    def get(self):
+        director_id = request.args.get('director_id')
+        genre_id = request.args.get('genre_id')
+        # представление возвращает только фильмы с определенным режиссером и жанром по запросу типа: /movies/?director_id=2&genre_id=4
+        if director_id and genre_id:
+            query = movies_schema.dump(Movie.query.filter(Movie.director_id == director_id,
+                                                           Movie.genre_id == genre_id).all())
+            return query, 200
+
+        if director_id:
+            query = movies_schema.dump(Movie.query.filter(Movie.director_id == director_id).all())
+            return query, 200
+
+        if genre_id:
+            query = movies_schema.dump(Movie.query.filter(Movie.genre_id == genre_id).all())
+            return query, 200
+
+@movies_ns.route('/<int:pk>')
+class MovieView(Resource):
+    def get(self, pk: int):
+        return movies_schema.dump(Movie.query.get_or_404(pk)), 200
 
 
-class Movie(db.Model):
-    __tablename__ = 'movie'
-    id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(255))
-    description = db.Column(db.String(255))
-    trailer = db.Column(db.String(255))
-    year = db.Column(db.Integer)
-    rating = db.Column(db.Float)
-    genre_id = db.Column(db.Integer, db.ForeignKey("genre.id"))
-    genre = db.relationship("Genre")
-    director_id = db.Column(db.Integer, db.ForeignKey("director.id"))
-    director = db.relationship("Director")
 
-class Director(db.Model):
-    __tablename__ = 'director'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(255))
-
-
-class Genre(db.Model):
-    __tablename__ = 'genre'
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(255))
 
 
 
