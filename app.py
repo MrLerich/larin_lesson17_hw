@@ -65,7 +65,7 @@ class DirectorView(Resource):
     def get(self, director_id):
         director = db.session.query(models.Director).filter(models.Director.id == director_id).first()
         if director is None:
-            return f'Режиссёра с идентификатором №{movie_id} нет в базе', 404
+            return f'Режиссёра с идентификатором №{director_id} нет в базе', 404
 
         return director_schema.dump(director), 200
 
@@ -82,7 +82,7 @@ class GenreView(Resource):
     def get(self, genre_id):
         genre = db.session.query(models.Genre).filter(models.Genre.id == genre_id).first()
         if genre is None:
-            return f'Жанра с идентификатором №{movie_id} нет в базе', 404
+            return f'Жанра с идентификатором №{genre_id} нет в базе', 404
 
         return genre_schema.dump(genre), 200
 
