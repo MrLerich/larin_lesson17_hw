@@ -28,14 +28,20 @@ class MoviesView(Resource):
         if director_id and genre_id:
             director_with_genre = movies_schema.dump(Movie.query.filter(Movie.director_id == director_id,
                                                           Movie.genre_id == genre_id).all())
+            if director_with_genre == []:
+                return f'Фильма с таким режиссёром №{director_id} и таким жанром №{genre_id} нет в базе', 404
             return director_with_genre, 200
 
         if director_id:
             director = movies_schema.dump(Movie.query.filter(Movie.director_id == director_id).all())
+            if director == []:
+                return f'Режиссёра с идентификатором №{director_id} нет в базе', 404
             return director, 200
 
         if genre_id:
             genre = movies_schema.dump(Movie.query.filter(Movie.genre_id == genre_id).all())
+            if genre == []:
+                return f'Жанра с идентификатором №{genre_id} нет в базе', 404
             return genre, 200
 
         else:
@@ -89,3 +95,5 @@ class GenreView(Resource):
 
 if __name__ == '__main__':
     app.run(debug=True)
+
+
